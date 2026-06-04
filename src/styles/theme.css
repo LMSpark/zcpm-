@@ -1,0 +1,72 @@
+:root {
+  --app-primary: #d92f34;
+  --app-primary-weak: #fff0f0;
+  --app-primary-soft: #ffe1e1;
+  --app-primary-dark: #a80f16;
+  --app-success: #18a058;
+  --app-warning: #d98a00;
+  --app-danger: #ef3b2d;
+  --app-info: #2d8cf0;
+  --app-bg: #f4f6f9;
+  --app-surface: #ffffff;
+  --app-surface-muted: #f7f8fa;
+  --app-text: #172033;
+  --app-text-soft: #5f6b7a;
+  --app-border: #dde3eb;
+  --app-sidebar: #17202c;
+  --app-sidebar-active: #25364a;
+  --app-shadow: 0 12px 32px rgba(18, 35, 60, 0.08);
+  --app-radius: 8px;
+  --el-color-primary: var(--app-primary);
+  --el-color-primary-light-3: color-mix(in srgb, var(--app-primary), white 35%);
+  --el-color-primary-light-5: color-mix(in srgb, var(--app-primary), white 55%);
+  --el-color-primary-light-7: color-mix(in srgb, var(--app-primary), white 75%);
+  --el-color-primary-light-9: color-mix(in srgb, var(--app-primary), white 92%);
+  --el-color-primary-dark-2: var(--app-primary-dark);
+  color-scheme: light;
+}
+
+html[data-theme="zhongchu"] {
+  --app-primary: #d92f34;
+  --app-primary-weak: #fff0f0;
+  --app-primary-soft: #ffe0e0;
+  --app-primary-dark: #a80f16;
+  --app-sidebar: #1f2430;
+  --app-sidebar-active: #31242b;
+}
+
+html[data-theme="gov-blue"] {
+  --app-primary: #1f6feb;
+  --app-primary-weak: #eef5ff;
+  --app-primary-soft: #dcebff;
+  --app-primary-dark: #144ba0;
+  --app-sidebar: #172133;
+  --app-sidebar-active: #1d365b;
+}
+
+html[data-theme="mine-green"] {
+  --app-primary: #0f8f68;
+  --app-primary-weak: #ecf8f3;
+  --app-primary-soft: #d4f0e7;
+  --app-primary-dark: #0b684d;
+  --app-sidebar: #162620;
+  --app-sidebar-active: #1d4034;
+}
+
+html[data-theme="orange"] {
+  --app-primary: #e26b16;
+  --app-primary-weak: #fff4ec;
+  --app-primary-soft: #ffe1cc;
+  --app-primary-dark: #a84d0d;
+  --app-sidebar: #27221d;
+  --app-sidebar-active: #443125;
+}
+
+html[data-theme="neutral"] {
+  --app-primary: #4b5d73;
+  --app-primary-weak: #f1f4f7;
+  --app-primary-soft: #e2e8ef;
+  --app-primary-dark: #303c4b;
+  --app-sidebar: #1c222b;
+  --app-sidebar-active: #2d3745;
+}
