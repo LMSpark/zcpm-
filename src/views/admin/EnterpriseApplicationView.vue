@@ -11,8 +11,8 @@
         <el-table-column label="操作" width="240">
           <template #default="{ row }">
             <el-button size="small" @click="current = row">查看</el-button>
-            <el-button size="small" type="success" @click="store.auditEnterpriseApplication(row.id, true, '资料齐全')">通过</el-button>
-            <el-button size="small" type="danger" @click="store.auditEnterpriseApplication(row.id, false, '请补充企业材料')">驳回</el-button>
+            <el-button size="small" type="success" @click="confirmAudit(row.id, true)">通过</el-button>
+            <el-button size="small" type="danger" @click="confirmAudit(row.id, false)">驳回</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -27,6 +27,10 @@
         <el-descriptions-item label="地址">{{ current.address }}</el-descriptions-item>
         <el-descriptions-item label="备注">{{ current.remark }}</el-descriptions-item>
       </el-descriptions>
+      <div v-if="current" class="attachment-list">
+        <el-tag v-for="item in attachments" :key="item.id">{{ item.usage }}：{{ item.fileName }}</el-tag>
+        <el-empty v-if="!attachments.length" description="暂无入驻材料" />
+      </div>
     </el-dialog>
   </AdminLayout>
 </template>
@@ -37,10 +41,18 @@ import AdminLayout from "@/layouts/AdminLayout.vue";
 import StatusTag from "@/components/StatusTag.vue";
 import { useAuctionStore } from "@/stores/auction";
 import type { EnterpriseApplication } from "@/types";
+import { confirmWithReason } from "@/utils/workflow";
 
 const store = useAuctionStore();
 const current = ref<EnterpriseApplication | undefined>();
 const visible = computed({ get: () => Boolean(current.value), set: (val) => (!val ? (current.value = undefined) : undefined) });
+const attachments = computed(() => (current.value ? store.attachmentsFor("enterpriseApplication", current.value.id) : []));
+
+async function confirmAudit(id: string, pass: boolean) {
+  const reason = await confirmWithReason(pass ? "入驻审核通过" : "入驻审核驳回", pass ? "确认通过该企业入驻申请？" : "确认驳回该企业入驻申请？", pass ? "资料齐全" : "请补充企业材料");
+  if (!reason) return;
+  store.auditEnterpriseApplication(id, pass, reason);
+}
 </script>
 
 <style scoped>
@@ -48,5 +60,12 @@ const visible = computed({ get: () => Boolean(current.value), set: (val) => (!va
   padding: 18px;
   background: #fff;
   border: 1px solid var(--app-border);
+}
+
+.attachment-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
 }
 </style>

@@ -31,24 +31,70 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
 import PublicLayout from "@/layouts/PublicLayout.vue";
-import { useAuthStore } from "@/stores/auth";
+import { useAuctionStore } from "@/stores/auction";
 
 const router = useRouter();
-const auth = useAuthStore();
+const store = useAuctionStore();
 const type = ref("个人注册");
 const active = ref(0);
 const email = ref("250301476@qq.com");
 const username = ref("newuser");
 const phone = ref("17771476129");
 const agree = ref(true);
+const created = ref(false);
 
 function next() {
-  if (active.value < 2) active.value += 1;
-  else {
-    auth.login(type.value === "商户注册" ? "merchant" : "bidder", username.value);
-    router.push(type.value === "商户注册" ? "/merchant" : "/account");
+  if (!email.value || !agree.value) {
+    ElMessage.warning("请填写邮箱并确认协议");
+    return;
   }
+  if (active.value === 0) {
+    active.value = 1;
+    return;
+  }
+  if (active.value === 1 && !created.value) {
+    if (!username.value || !phone.value) {
+      ElMessage.warning("请填写账号名称和手机号");
+      return;
+    }
+    if (type.value === "个人注册") {
+      store.saveUser({
+        id: "",
+        username: username.value,
+        password: "123456",
+        name: username.value,
+        role: "bidder",
+        phone: phone.value,
+        email: email.value,
+        verified: false,
+        status: "待审核",
+        reviewReason: "个人注册待平台审核"
+      });
+      ElMessage.success("个人注册已提交，请等待平台用户审核");
+    } else {
+      store.saveEnterpriseApplication({
+        id: "",
+        enterpriseName: username.value,
+        applicant: username.value,
+        phone: phone.value,
+        email: email.value,
+        assetType: "工业循环物资",
+        province: "湖北省",
+        city: "武汉市",
+        address: "请在入驻审核前补充详细地址",
+        status: "待审核",
+        submittedAt: new Date().toISOString().slice(0, 19).replace("T", " "),
+        remark: "商户注册自动生成入驻申请"
+      });
+      ElMessage.success("商户注册已生成入驻申请，请等待平台审核");
+    }
+    created.value = true;
+    active.value = 2;
+    return;
+  }
+  router.push(type.value === "商户注册" ? "/merchant/login" : "/login");
 }
 </script>
 

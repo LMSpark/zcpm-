@@ -3,9 +3,10 @@
     <section class="page-shell partner-page">
       <h1>合作企业</h1>
       <div class="partner-grid">
-        <div v-for="org in store.db.organizations" :key="org.id" class="partner-card surface">
+        <div v-for="org in store.enabledPartnerProfiles" :key="org.id" class="partner-card surface">
           <AppLogo compact />
           <h2>{{ org.name }}</h2>
+          <p>{{ org.summary }}</p>
           <p>{{ org.phone }}</p>
           <p>{{ org.address }}</p>
         </div>

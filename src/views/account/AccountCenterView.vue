@@ -50,26 +50,48 @@
           <div class="safe-box">
             <el-input v-model="captcha" placeholder="图形验证码 1235" />
             <el-input v-model="sms" placeholder="短信验证码 8888" />
+            <el-input v-model="nextPhone" placeholder="绑定手机号" />
+            <el-input v-model="nextEmail" placeholder="绑定邮箱" />
+            <el-input v-model="nextPassword" placeholder="新密码" show-password />
             <el-button type="primary" @click="nextSafe">下一步</el-button>
+            <el-button @click="saveSecurity">保存账户安全信息</el-button>
           </div>
         </template>
 
         <template v-else>
           <h2>我的消息</h2>
-          <div v-for="msg in messages" :key="msg.id" class="message" @click="store.markMessageRead(msg.id)">
+          <div class="toolbar filters">
+            <el-radio-group v-model="messageCategory">
+              <el-radio-button value="">全部</el-radio-button>
+              <el-radio-button value="交易">交易</el-radio-button>
+              <el-radio-button value="审核">审核</el-radio-button>
+              <el-radio-button value="账户">账户</el-radio-button>
+              <el-radio-button value="系统">系统</el-radio-button>
+            </el-radio-group>
+            <el-button @click="store.markMessagesRead(messages.map((msg) => msg.id))">批量已读</el-button>
+          </div>
+          <div v-for="msg in pagedMessages" :key="msg.id" class="message" @click="openMessage(msg.id)">
             <strong>{{ msg.title }}</strong>
             <time>{{ msg.createdAt }}</time>
             <p>{{ msg.content }}</p>
+            <el-button size="small" type="danger" @click.stop="store.removeMessage(msg.id)">删除</el-button>
           </div>
           <el-empty v-if="!messages.length" description="暂无消息" />
+          <el-pagination v-model:current-page="messagePage" :page-size="5" layout="prev, pager, next, total" :total="messages.length" />
         </template>
       </main>
     </section>
+    <el-dialog v-model="messageVisible" title="消息详情" width="560px">
+      <h3>{{ currentMessage?.title }}</h3>
+      <p>{{ currentMessage?.content }}</p>
+      <p class="muted">{{ currentMessage?.createdAt }} · {{ currentMessage?.category }}</p>
+    </el-dialog>
   </PublicLayout>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
+import { ElMessage } from "element-plus";
 import PublicLayout from "@/layouts/PublicLayout.vue";
 import { useAuthStore } from "@/stores/auth";
 import { useAuctionStore } from "@/stores/auction";
@@ -83,9 +105,18 @@ const tradeStatus = ref("");
 const safeStep = ref(0);
 const captcha = ref("");
 const sms = ref("");
+const nextPhone = ref("");
+const nextEmail = ref("");
+const nextPassword = ref("");
+const messageCategory = ref("");
+const messagePage = ref(1);
+const currentMessageId = ref("");
+const messageVisible = ref(false);
 
 onMounted(() => {
   if (!auth.currentUser || auth.role !== "bidder") auth.login("bidder");
+  nextPhone.value = auth.currentUser?.phone || "";
+  nextEmail.value = auth.currentUser?.email || "";
 });
 
 const myRows = computed(() =>
@@ -104,11 +135,34 @@ const myRows = computed(() =>
     .filter((row) => !tradeStatus.value || row.assetStatus === tradeStatus.value || row.depositStatus === tradeStatus.value || (tradeStatus.value === "保证金" && row.depositStatus))
 );
 
-const messages = computed(() => store.db.messages.filter((msg) => msg.userId === auth.currentUser?.id));
+const messages = computed(() => store.db.messages.filter((msg) => msg.userId === auth.currentUser?.id && (!messageCategory.value || msg.category === messageCategory.value)));
+const pagedMessages = computed(() => messages.value.slice((messagePage.value - 1) * 5, messagePage.value * 5));
+const currentMessage = computed(() => store.db.messages.find((msg) => msg.id === currentMessageId.value));
 
 function nextSafe() {
+  if (captcha.value !== "1235" || sms.value !== "8888") {
+    ElMessage.warning("请输入演示验证码：图形 1235，短信 8888");
+    return;
+  }
   if (safeStep.value < 2) safeStep.value += 1;
   if (safeStep.value === 2) auth.verifyCurrentUser();
+}
+
+function saveSecurity() {
+  if (!auth.currentUser) return;
+  const patch = {
+    phone: nextPhone.value || auth.currentUser?.phone || "",
+    email: nextEmail.value || auth.currentUser?.email
+  };
+  auth.updateCurrentUser(patch, "账户安全绑定");
+  if (nextPassword.value) auth.changePassword(nextPassword.value);
+  store.addMessage(auth.currentUser.id, "账户安全更新", "账户安全信息已模拟保存。", "账户");
+}
+
+function openMessage(id: string) {
+  currentMessageId.value = id;
+  store.markMessageRead(id);
+  messageVisible.value = true;
 }
 </script>
 

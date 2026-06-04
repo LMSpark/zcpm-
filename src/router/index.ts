@@ -28,6 +28,10 @@ const merchantRoutes: RouteRecordRaw[] = [
   { path: "/merchant/assets", component: () => import("@/views/admin/AssetManageView.vue"), meta: { scope: "merchant", method: "竞价", title: "标的管理" } },
   { path: "/merchant/materials", component: () => import("@/views/admin/MaterialManageView.vue"), meta: { scope: "merchant", title: "标的数量证明材料管理" } },
   { path: "/merchant/publicity", component: () => import("@/views/admin/NoticeManageView.vue"), meta: { scope: "merchant", noticeType: "信息公示", title: "信息公示管理" } },
+  { path: "/merchant/listing-publicity", component: () => import("@/views/admin/NoticeManageView.vue"), meta: { scope: "merchant", noticeType: "挂牌信息公示", title: "挂牌信息公示" } },
+  { path: "/merchant/listing-announcements", component: () => import("@/views/admin/NoticeManageView.vue"), meta: { scope: "merchant", noticeType: "挂牌公告", title: "挂牌公告" } },
+  { path: "/merchant/listing-bidders", component: () => import("@/views/admin/BidderManageView.vue"), meta: { scope: "merchant", method: "挂牌", title: "挂牌报名人审核" } },
+  { path: "/merchant/listings", component: () => import("@/views/admin/AssetManageView.vue"), meta: { scope: "merchant", method: "挂牌", title: "挂牌标的" } },
   { path: "/merchant/company", component: () => import("@/views/admin/CompanyInfoView.vue"), meta: { scope: "merchant", title: "企业信息维护" } }
 ];
 
@@ -61,6 +65,26 @@ const router = createRouter({
   scrollBehavior() {
     return { top: 0 };
   }
+});
+
+router.beforeEach((to) => {
+  const raw = localStorage.getItem("zcpm-auth-user");
+  let user: { role?: string } | null = null;
+  try {
+    user = raw ? JSON.parse(raw) : null;
+  } catch {
+    localStorage.removeItem("zcpm-auth-user");
+  }
+  if (to.path.startsWith("/platform") && !to.path.endsWith("/login") && user?.role !== "platform") {
+    return { path: "/platform/login", query: { redirect: to.fullPath } };
+  }
+  if (to.path.startsWith("/merchant") && !to.path.endsWith("/login") && user?.role !== "merchant") {
+    return { path: "/merchant/login", query: { redirect: to.fullPath } };
+  }
+  if (to.path.startsWith("/account") && user?.role !== "bidder") {
+    return { path: "/login", query: { redirect: to.fullPath } };
+  }
+  return true;
 });
 
 export default router;

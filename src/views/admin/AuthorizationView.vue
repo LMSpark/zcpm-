@@ -12,21 +12,25 @@
             </el-checkbox-group>
           </template>
         </el-table-column>
+        <el-table-column label="操作" width="120"><template #default="{ row }"><el-button size="small" type="primary" @click="save(row)">保存</el-button></template></el-table-column>
       </el-table>
     </div>
   </AdminLayout>
 </template>
 
 <script setup lang="ts">
-import { reactive } from "vue";
+import { ref } from "vue";
 import AdminLayout from "@/layouts/AdminLayout.vue";
+import { useAuctionStore } from "@/stores/auction";
+import type { PermissionKey, RolePermission } from "@/types";
 
-const permissions = ["交易管理", "挂牌交易", "系统管理", "商户入驻", "账号管理", "系统配置"];
-const roles = reactive([
-  { role: "platform", name: "平台运营", permissions: [...permissions] },
-  { role: "merchant", name: "商家用户", permissions: ["交易管理", "竞买人管理", "账号管理"] },
-  { role: "bidder", name: "竞买人", permissions: ["前台交易", "个人中心"] }
-]);
+const store = useAuctionStore();
+const permissions: PermissionKey[] = ["交易管理", "挂牌交易", "系统管理", "商户入驻", "账号管理", "系统配置", "前台交易", "个人中心"];
+const roles = ref<RolePermission[]>(store.db.rolePermissions.map((item) => ({ ...item, permissions: [...item.permissions] })));
+
+function save(row: RolePermission) {
+  store.saveRolePermission({ ...row, permissions: [...row.permissions] });
+}
 </script>
 
 <style scoped>

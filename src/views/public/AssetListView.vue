@@ -105,6 +105,15 @@ const filtered = computed(() => {
   if (filterState.region) rows = rows.filter((asset) => asset.region === filterState.region);
   if (filterState.commissionType) rows = rows.filter((asset) => asset.commissionType === filterState.commissionType);
   if (filterState.status) rows = rows.filter((asset) => asset.status === filterState.status.replace("正在进行", "进行中"));
+  if (filterState.startAt) {
+    const days = Number(filterState.startAt.replace("未来", "").replace("天", ""));
+    const now = Date.now();
+    const limit = now + days * 24 * 60 * 60 * 1000;
+    rows = rows.filter((asset) => {
+      const start = new Date(asset.startAt.replace(" ", "T")).getTime();
+      return start >= now && start <= limit;
+    });
+  }
   if (minPrice.value !== undefined) rows = rows.filter((asset) => asset.currentPrice >= Number(minPrice.value));
   if (maxPrice.value !== undefined && maxPrice.value > 0) rows = rows.filter((asset) => asset.currentPrice <= Number(maxPrice.value));
   if (sortBy.value === "价格") rows = [...rows].sort((a, b) => b.currentPrice - a.currentPrice);

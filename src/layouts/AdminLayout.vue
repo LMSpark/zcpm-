@@ -71,6 +71,7 @@ import AppLogo from "@/components/AppLogo.vue";
 import ThemeSwitcher from "@/components/ThemeSwitcher.vue";
 import { useAuthStore } from "@/stores/auth";
 import { useAuctionStore } from "@/stores/auction";
+import type { PermissionKey } from "@/types";
 
 const props = defineProps<{ scope: "merchant" | "platform" }>();
 const route = useRoute();
@@ -89,6 +90,16 @@ const merchantMenu = [
       { label: "标的管理", path: "/merchant/assets" },
       { label: "标的数量证明材料", path: "/merchant/materials" },
       { label: "信息公示管理", path: "/merchant/publicity" }
+    ]
+  },
+  {
+    title: "挂牌交易",
+    icon: ClipboardList,
+    children: [
+      { label: "挂牌信息公示", path: "/merchant/listing-publicity" },
+      { label: "挂牌公告", path: "/merchant/listing-announcements" },
+      { label: "挂牌报名人审核", path: "/merchant/listing-bidders" },
+      { label: "挂牌标的", path: "/merchant/listings" }
     ]
   },
   { title: "竞买人管理", icon: Users, children: [{ label: "竞买人管理", path: "/merchant/bidders" }] },
@@ -142,7 +153,9 @@ const platformMenu = [
   { title: "公开内容", icon: FileText, children: [{ label: "前台预览", path: "/" }] }
 ];
 
-const menu = computed(() => (props.scope === "merchant" ? merchantMenu : platformMenu));
+const menu = computed(() =>
+  (props.scope === "merchant" ? merchantMenu : platformMenu).filter((group) => group.title === "公开内容" || auctionStore.hasPermission(auth.role, group.title as PermissionKey))
+);
 const filteredMenu = computed(() => {
   if (!menuKeyword.value) return menu.value;
   return menu.value

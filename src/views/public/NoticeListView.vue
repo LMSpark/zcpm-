@@ -13,6 +13,12 @@
           </el-menu>
         </aside>
         <main>
+          <div v-if="categoryOptions.length" class="category-filter">
+            <el-check-tag :checked="!categoryFilter" @change="categoryFilter = ''">全部</el-check-tag>
+            <el-check-tag v-for="category in categoryOptions" :key="category.id" :checked="categoryFilter === category.name" @change="categoryFilter = category.name">
+              {{ category.name }}
+            </el-check-tag>
+          </div>
           <RouterLink v-for="notice in paged" :key="notice.id" :to="`/notices/${notice.id}`" class="notice-item">
             <div>
               <StatusTag :value="notice.publishStatus" />
@@ -41,15 +47,24 @@ const route = useRoute();
 const router = useRouter();
 const store = useAuctionStore();
 const page = ref(1);
+const categoryFilter = ref("");
 const type = computed(() => String(route.meta.type || "公告"));
 const title = computed(() => String(route.meta.title || type.value));
 const rows = computed(() => {
-  if (type.value === "公告") return store.publicNotices.filter((notice) => ["公告", "交易公告", "挂牌公告"].includes(notice.type));
-  return store.publicNotices.filter((notice) => notice.type === type.value || notice.type.includes(type.value));
+  const source = type.value === "公告" ? store.publicNotices.filter((notice) => ["公告", "交易公告", "挂牌公告"].includes(notice.type)) : store.publicNotices.filter((notice) => notice.type === type.value || notice.type.includes(type.value));
+  return source.filter((notice) => !categoryFilter.value || notice.contentCategory === categoryFilter.value);
 });
 const paged = computed(() => rows.value.slice((page.value - 1) * 8, page.value * 8));
+const categoryOptions = computed(() =>
+  store.db.resourceCategories
+    .filter((category) => category.enabled !== false && ((type.value === "新闻" && category.type === "新闻分类") || (type.value === "帮助" && category.type === "帮助分类")))
+    .sort((a, b) => a.sort - b.sort)
+);
 
-watch(rows, () => (page.value = 1));
+watch([rows, type], () => {
+  page.value = 1;
+  if (!categoryOptions.value.some((category) => category.name === categoryFilter.value)) categoryFilter.value = "";
+});
 function go(path: string) {
   router.push(path);
 }
@@ -96,5 +111,12 @@ function go(path: string) {
 time {
   color: var(--app-text-soft);
   white-space: nowrap;
+}
+
+.category-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
 }
 </style>

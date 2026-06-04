@@ -35,7 +35,12 @@ const role = computed<Role>(() => (route.meta.role as Role) || "bidder");
 const title = computed(() => (role.value === "merchant" ? "商家登录" : role.value === "platform" ? "平台登录" : "竞买人登录"));
 
 function login() {
-  auth.login(role.value, username.value);
+  const ok = auth.login(role.value, username.value, password.value);
+  if (!ok) return;
+  if (route.query.redirect) {
+    router.push(String(route.query.redirect));
+    return;
+  }
   if (role.value === "merchant") router.push("/merchant");
   else if (role.value === "platform") router.push("/platform");
   else router.push("/account");

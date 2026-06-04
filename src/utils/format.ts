@@ -29,13 +29,4 @@ export function countdown(value: string) {
   return `${days}天${hours}小时${minutes}分${seconds}秒`;
 }
 
-export function downloadTextFile(fileName: string, content: string) {
-  const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  URL.revokeObjectURL(link.href);
-  link.remove();
-}
+export { downloadTextFile } from "@/utils/download";

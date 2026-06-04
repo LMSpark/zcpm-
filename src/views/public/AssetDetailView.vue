@@ -38,11 +38,19 @@
             <span>剩余 <b>{{ countdown(asset.endAt) }}</b></span>
           </div>
           <div class="bid-box">
-            <el-input-number v-model="bidAmount" :min="asset.currentPrice + asset.increment" :step="asset.increment" />
-            <el-button type="primary" @click="confirmBid">出价</el-button>
-            <el-button @click="confirmDeposit">缴纳保证金</el-button>
-            <el-button @click="register">报名</el-button>
+            <template v-if="asset.method === '竞价'">
+              <el-input-number v-model="bidAmount" :min="asset.currentPrice + asset.increment" :step="asset.increment" />
+              <el-button type="primary" :disabled="!canBid" @click="confirmBid">出价</el-button>
+              <el-button :disabled="!canPayDeposit" @click="confirmDeposit">缴纳保证金</el-button>
+              <el-button :disabled="!canRegister" @click="register">报名</el-button>
+            </template>
+            <template v-else>
+              <el-button type="primary" :disabled="!canRegister" @click="register">挂牌报名</el-button>
+              <el-button :disabled="!canPayDeposit" @click="confirmDeposit">缴纳保证金</el-button>
+              <el-button type="success" :disabled="!canConfirmListing" @click="confirmListingDeal">挂牌成交确认</el-button>
+            </template>
           </div>
+          <p v-if="actionTip" class="muted">{{ actionTip }}</p>
           <p class="muted">
             报名状态：{{ registration?.applyStatus || "未报名" }} · 保证金：{{ registration?.depositStatus || "未缴纳" }}
           </p>
@@ -87,7 +95,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watchEffect } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessageBox } from "element-plus";
 import PublicLayout from "@/layouts/PublicLayout.vue";
 import AssetVisual from "@/components/AssetVisual.vue";
@@ -97,6 +105,7 @@ import { useAuthStore } from "@/stores/auth";
 import { countdown, formatDateTime, formatMoney } from "@/utils/format";
 
 const route = useRoute();
+const router = useRouter();
 const store = useAuctionStore();
 const auth = useAuthStore();
 const quickKeyword = ref("");
@@ -106,6 +115,19 @@ const notice = computed(() => (asset.value?.announcementId ? store.findNotice(as
 const registration = computed(() => (asset.value && auth.currentUser ? store.userRegistration(asset.value.id, auth.currentUser.id) : undefined));
 const bids = computed(() => (asset.value ? store.bidsForAsset(asset.value.id) : []));
 const bidAmount = ref(0);
+const canRegister = computed(() => Boolean(asset.value && ["即将开始", "进行中"].includes(asset.value.status) && !registration.value));
+const canPayDeposit = computed(() => Boolean(asset.value && auth.currentUser && auth.role === "bidder" && registration.value?.applyStatus === "已通过" && registration.value.depositStatus === "未缴纳"));
+const canBid = computed(() => Boolean(asset.value?.method === "竞价" && asset.value.status === "进行中" && registration.value?.depositStatus === "已缴纳"));
+const canConfirmListing = computed(() => Boolean(asset.value?.method === "挂牌" && asset.value.status === "进行中" && registration.value?.depositStatus === "已缴纳"));
+const actionTip = computed(() => {
+  if (!auth.currentUser || auth.role !== "bidder") return "请先登录竞买人账号后再报名、缴纳保证金或参与交易。";
+  if (!asset.value) return "";
+  if (asset.value.method === "挂牌") return "挂牌标的按报名审核、保证金、成交确认流程办理，不支持直接出价。";
+  if (asset.value.status !== "进行中") return "当前标的未处于竞价中，出价按钮会保持禁用。";
+  if (!registration.value) return "请先报名并完成保证金缴纳后再出价。";
+  if (registration.value.depositStatus !== "已缴纳") return "保证金缴纳成功后方可出价。";
+  return "";
+});
 
 watchEffect(() => {
   if (asset.value) bidAmount.value = asset.value.currentPrice + asset.value.increment;
@@ -113,27 +135,36 @@ watchEffect(() => {
 
 function ensureBidder() {
   if (!auth.currentUser || auth.role !== "bidder") {
-    auth.login("bidder");
+    router.push({ path: "/login", query: { redirect: route.fullPath } });
+    return false;
   }
+  return true;
 }
 
 function register() {
-  ensureBidder();
+  if (!ensureBidder()) return;
   if (asset.value) store.registerForAsset(asset.value.id, auth.currentUser);
 }
 
 async function confirmDeposit() {
-  ensureBidder();
+  if (!ensureBidder()) return;
   if (!asset.value) return;
   await ElMessageBox.confirm(`确认缴纳 ${formatMoney(asset.value.deposit)} 保证金？`, "缴纳保证金确认", { type: "warning" });
   store.payDeposit(asset.value.id, auth.currentUser);
 }
 
 async function confirmBid() {
-  ensureBidder();
+  if (!ensureBidder()) return;
   if (!asset.value) return;
   await ElMessageBox.confirm(`确认以 ${formatMoney(bidAmount.value)} 出价？末段出价可能触发延时。`, "出价确认", { type: "warning" });
   store.placeBid(asset.value.id, auth.currentUser, bidAmount.value);
+}
+
+async function confirmListingDeal() {
+  if (!ensureBidder()) return;
+  if (!asset.value) return;
+  await ElMessageBox.confirm("确认按挂牌流程完成成交确认？保证金将模拟转成交款。", "挂牌成交确认", { type: "warning" });
+  store.confirmListingDeal(asset.value.id, auth.currentUser);
 }
 </script>
 

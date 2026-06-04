@@ -5,6 +5,7 @@ export type ThemeId = "zhongchu" | "gov-blue" | "mine-green" | "orange" | "neutr
 export interface UserAccount {
   id: string;
   username: string;
+  password?: string;
   name: string;
   role: Role;
   phone: string;
@@ -14,6 +15,8 @@ export interface UserAccount {
   verified: boolean;
   status: "正常" | "待审核" | "冻结";
   lastLogin?: string;
+  reviewReason?: string;
+  updatedAt?: string;
 }
 
 export interface Asset {
@@ -52,6 +55,8 @@ export interface Asset {
   biddingNotice: string;
   description: string;
   terminationReason?: string;
+  reviewReason?: string;
+  updatedAt?: string;
 }
 
 export interface BidRecord {
@@ -95,6 +100,11 @@ export interface Notice {
   relatedAssetId?: string;
   meetingId?: string;
   rejectReason?: string;
+  contentCategory?: string;
+  pinned?: boolean;
+  sort?: number;
+  reviewReason?: string;
+  updatedAt?: string;
 }
 
 export interface Meeting {
@@ -102,13 +112,17 @@ export interface Meeting {
   code: string;
   name: string;
   type: string;
-  status: "即将开始" | "进行中" | "已结束";
+  status: "即将开始" | "进行中" | "已结束" | "已归档";
   publishStatus: "待发布" | "发布中" | "已发布" | "已撤回";
   startAt: string;
   endAt: string;
   announcementTitle: string;
   enterprise: string;
   assetIds: string[];
+  rules?: string;
+  archiveStatus?: "未归档" | "已归档";
+  reviewReason?: string;
+  updatedAt?: string;
 }
 
 export interface EnterpriseApplication {
@@ -124,6 +138,8 @@ export interface EnterpriseApplication {
   status: "待审核" | "已通过" | "已驳回";
   submittedAt: string;
   remark?: string;
+  reviewReason?: string;
+  updatedAt?: string;
 }
 
 export interface Organization {
@@ -150,8 +166,9 @@ export interface Department {
 export interface ResourceCategory {
   id: string;
   name: string;
-  type: "类别" | "广告位" | "帮助分类";
+  type: "类别" | "广告位" | "帮助分类" | "新闻分类" | "合作企业";
   sort: number;
+  enabled?: boolean;
 }
 
 export interface ResourceItem {
@@ -161,6 +178,10 @@ export interface ResourceItem {
   url: string;
   status: "启用" | "停用";
   sort: number;
+  summary?: string;
+  pinned?: boolean;
+  resourceType?: "新闻" | "帮助" | "合作企业" | "静态资源";
+  logoAttachmentId?: string;
 }
 
 export interface UserMessage {
@@ -170,6 +191,70 @@ export interface UserMessage {
   content: string;
   createdAt: string;
   read: boolean;
+  category?: "交易" | "审核" | "系统" | "账户";
+}
+
+export interface AttachmentMeta {
+  id: string;
+  ownerType: "asset" | "notice" | "meeting" | "enterpriseApplication" | "organization" | "resource" | "user" | "registration";
+  ownerId: string;
+  usage: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  uploadedAt: string;
+  status: "已上传" | "已删除";
+}
+
+export interface AuditLog {
+  id: string;
+  targetType: string;
+  targetId: string;
+  action: string;
+  operator: string;
+  result: string;
+  reason?: string;
+  createdAt: string;
+}
+
+export interface SessionRecord {
+  id: string;
+  userId: string;
+  username: string;
+  role: Role;
+  loginAt: string;
+  lastActiveAt: string;
+  ip: string;
+  device: string;
+  online: boolean;
+}
+
+export type PermissionKey =
+  | "交易管理"
+  | "挂牌交易"
+  | "系统管理"
+  | "商户入驻"
+  | "账号管理"
+  | "系统配置"
+  | "前台交易"
+  | "个人中心";
+
+export interface RolePermission {
+  role: Role;
+  name: string;
+  permissions: PermissionKey[];
+}
+
+export interface PartnerProfile {
+  id: string;
+  organizationId?: string;
+  name: string;
+  phone: string;
+  address: string;
+  summary: string;
+  logoAttachmentId?: string;
+  enabled: boolean;
+  sort: number;
 }
 
 export interface MockDb {
@@ -185,4 +270,9 @@ export interface MockDb {
   resourceCategories: ResourceCategory[];
   resourceItems: ResourceItem[];
   messages: UserMessage[];
+  attachments: AttachmentMeta[];
+  auditLogs: AuditLog[];
+  sessions: SessionRecord[];
+  rolePermissions: RolePermission[];
+  partnerProfiles: PartnerProfile[];
 }

@@ -18,6 +18,7 @@
           <el-radio-button value="即将开始">即将开始</el-radio-button>
           <el-radio-button value="已结束">已结束</el-radio-button>
         </el-radio-group>
+        <el-button type="primary" @click="refreshAt = Date.now()">刷新交易状态</el-button>
       </div>
       <div class="meeting-list">
         <div v-for="meeting in filtered" :key="meeting.id" class="meeting-card surface">
@@ -48,8 +49,10 @@ import { formatDateTime } from "@/utils/format";
 const store = useAuctionStore();
 const commissionType = ref("");
 const status = ref("");
+const refreshAt = ref(Date.now());
 const filtered = computed(() =>
   store.db.meetings.filter((meeting) => {
+    void refreshAt.value;
     const assets = meeting.assetIds.map((id) => store.findAsset(id)).filter(Boolean);
     const byCommission = !commissionType.value || assets.some((asset) => asset?.commissionType === commissionType.value);
     const byStatus = !status.value || meeting.status === status.value.replace("正在进行", "进行中");

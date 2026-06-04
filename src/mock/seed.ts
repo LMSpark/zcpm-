@@ -315,6 +315,7 @@ export const initialDb: MockDb = {
     {
       id: "u-bidder",
       username: "suqcir",
+      password: "123456",
       name: "潘志杰",
       role: "bidder",
       phone: "17771476129",
@@ -326,6 +327,7 @@ export const initialDb: MockDb = {
     {
       id: "u-merchant",
       username: "merchant",
+      password: "123456",
       name: "root",
       role: "merchant",
       phone: "13247164111",
@@ -339,6 +341,7 @@ export const initialDb: MockDb = {
     {
       id: "u-platform",
       username: "pingt",
+      password: "123456",
       name: "PINGT",
       role: "platform",
       phone: "4009999988",
@@ -352,6 +355,7 @@ export const initialDb: MockDb = {
     {
       id: "u-audit",
       username: "audituser",
+      password: "123456",
       name: "待审核用户",
       role: "bidder",
       phone: "17700000001",
@@ -534,14 +538,16 @@ export const initialDb: MockDb = {
     }
   ],
   resourceCategories: [
-    { id: "rc-help", name: "帮助中心", type: "帮助分类", sort: 1 },
-    { id: "rc-news", name: "新闻中心", type: "类别", sort: 2 },
-    { id: "rc-banner", name: "首页广告位", type: "广告位", sort: 3 }
+    { id: "rc-help", name: "竞买帮助", type: "帮助分类", sort: 1, enabled: true },
+    { id: "rc-news", name: "平台动态", type: "新闻分类", sort: 2, enabled: true },
+    { id: "rc-partner", name: "合作企业", type: "合作企业", sort: 3, enabled: true },
+    { id: "rc-banner", name: "首页广告位", type: "广告位", sort: 4, enabled: true }
   ],
   resourceItems: [
-    { id: "ri-1", categoryId: "rc-help", title: "竞拍流程", url: "/help", status: "启用", sort: 1 },
-    { id: "ri-2", categoryId: "rc-help", title: "保证金规则", url: "/help", status: "启用", sort: 2 },
-    { id: "ri-3", categoryId: "rc-news", title: "平台服务升级", url: "/news", status: "启用", sort: 1 }
+    { id: "ri-1", categoryId: "rc-help", title: "竞拍流程", url: "/help", status: "启用", sort: 1, resourceType: "帮助", summary: "登录、实名认证、报名、缴纳保证金、参与竞价的完整流程。", pinned: true },
+    { id: "ri-2", categoryId: "rc-help", title: "保证金规则", url: "/help", status: "启用", sort: 2, resourceType: "帮助", summary: "保证金缴纳、转成交款、退还与异常处理说明。" },
+    { id: "ri-3", categoryId: "rc-news", title: "平台服务升级", url: "/news", status: "启用", sort: 1, resourceType: "新闻", summary: "平台优化竞价大厅、结果公示和企业入驻服务。", pinned: true },
+    { id: "ri-4", categoryId: "rc-partner", title: "中楚在线国际拍卖有限公司", url: "/partners", status: "启用", sort: 1, resourceType: "合作企业", summary: "长期合作拍卖服务机构，提供资产处置和交易组织服务。" }
   ],
   messages: [
     {
@@ -550,7 +556,8 @@ export const initialDb: MockDb = {
       title: "保证金缴纳成功",
       content: "标的终止审批已提交，请尽快批复",
       createdAt: "2026-05-29 09:54:54",
-      read: false
+      read: false,
+      category: "交易"
     },
     {
       id: "msg-2",
@@ -558,7 +565,85 @@ export const initialDb: MockDb = {
       title: "成交确认提醒",
       content: "工业循环设备已成交，请按公告要求办理成交确认与交割。",
       createdAt: "2026-05-28 21:20:00",
-      read: true
+      read: true,
+      category: "交易"
+    }
+  ],
+  attachments: [
+    {
+      id: "att-asset-455-material",
+      ownerType: "asset",
+      ownerId: "asset-455",
+      usage: "数量证明材料",
+      fileName: "数量证明材料.pdf",
+      fileType: "application/pdf",
+      fileSize: 245760,
+      uploadedAt: "2026-05-28 14:12:00",
+      status: "已上传"
+    }
+  ],
+  auditLogs: [
+    {
+      id: "audit-seed-1",
+      targetType: "system",
+      targetId: "initial",
+      action: "初始化演示数据",
+      operator: "系统",
+      result: "成功",
+      reason: "seedDb",
+      createdAt: "2026-06-04 09:00:00"
+    }
+  ],
+  sessions: [
+    {
+      id: "session-platform",
+      userId: "u-platform",
+      username: "pingt",
+      role: "platform",
+      loginAt: "2026-06-04 09:30:00",
+      lastActiveAt: "2026-06-04 09:30:00",
+      ip: "127.0.0.1",
+      device: "PC 浏览器",
+      online: true
+    },
+    {
+      id: "session-merchant",
+      userId: "u-merchant",
+      username: "merchant",
+      role: "merchant",
+      loginAt: "2026-06-04 09:20:00",
+      lastActiveAt: "2026-06-04 09:20:00",
+      ip: "127.0.0.1",
+      device: "PC 浏览器",
+      online: true
+    }
+  ],
+  rolePermissions: [
+    { role: "platform", name: "平台运营", permissions: ["交易管理", "挂牌交易", "系统管理", "商户入驻", "账号管理", "系统配置"] },
+    { role: "merchant", name: "商家用户", permissions: ["交易管理", "挂牌交易", "账号管理"] },
+    { role: "bidder", name: "竞买人", permissions: ["前台交易", "个人中心"] },
+    { role: "guest", name: "游客", permissions: ["前台交易"] }
+  ],
+  partnerProfiles: [
+    {
+      id: "partner-1",
+      organizationId: "org-root",
+      name: "中楚拍卖平台",
+      phone: "4009999988",
+      address: "武汉市东湖高新区",
+      summary: "面向城市矿产、产权和循环资源的公开交易服务平台。",
+      enabled: true,
+      sort: 1
+    },
+    {
+      id: "partner-2",
+      organizationId: "org-temp",
+      name: "暂凌拍卖",
+      phone: "17700000002",
+      address: "武汉市江岸区",
+      summary: "合作拍卖服务机构，参与多类型资产处置服务。",
+      enabled: true,
+      sort: 2
     }
   ]
 };
